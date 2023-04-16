@@ -90,25 +90,9 @@ public struct QuotesFeature: ReducerProtocol {
         return .send(.start)
 
       case let .update(id, type):
-        let useCase: (Int) async throws -> Quote
-        switch type {
-        case .upvote:
-          useCase = UseCases.upvoteQuote
-        case .downvote:
-          useCase = UseCases.downvoteQuote
-        case .fav:
-          useCase = UseCases.favoriteQuote
-        case .unfav:
-          useCase = UseCases.unFavoriteQuote
-        case .clearvote:
-          useCase = UseCases.clearVoteQuote
-        default:
-          return .none
-        }
-
         return .run { send in
           do {
-            let quote = try await useCase(id)
+            let quote = try await UseCases.updateQuote(id: id, type: type)
             await send(.updateQuote(id, quote))
           } catch {
             await send(.failure)

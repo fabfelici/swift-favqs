@@ -6,10 +6,10 @@ import Domain
 
 public extension UseCases {
 
-  static func unhideQuote(id: Int) async throws -> Quote {
+  static func updateQuote(id: Int, type: QuoteRepository.UpdateQuoteType) async throws -> Quote {
     @Dependency(\.sessionRepository) var sessionRepository
     @Dependency(\.quoteRepository) var quoteRepository
-    return try await quoteRepository.update(id, .unhide, sessionRepository.read())
+    return try await quoteRepository.update(id, type, sessionRepository.read())
   }
 
 }
