@@ -1,0 +1,7 @@
+import_name: 'ArkanaKeys'
+namespace: 'Keys'
+swift_declaration_strategy: let # Optional. One of: lazy var, var, let. Defaults to let.
+should_generate_unit_tests: false # Optional. One of: true, false. Defaults to true.
+package_manager: spm # Optional. This setting defines which type of dependency management you're going ot use to integrate Arkana into your project. One of: spm, cocoapods. If you use both in your project, use cocoapods here. Defaults to spm.
+global_secrets:
+    - FavQsApiKey

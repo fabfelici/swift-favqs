@@ -1,0 +1,5 @@
+.env
+ArkanaKeys
+.swiftpm
+xcuserdata/
+build/
