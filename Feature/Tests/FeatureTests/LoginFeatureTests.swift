@@ -51,7 +51,7 @@ final class LoginFeatureTests: XCTestCase {
   func testReadExistingLogin() async {
     let feature = LoginFeature()
     let store = TestStore(
-      initialState: .loggingIn,
+      initialState: .login(.init()),
       reducer: feature
     )
 

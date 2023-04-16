@@ -13,10 +13,22 @@ public struct QuotesFeature: ReducerProtocol {
       case failed
     }
 
-    public var status: Status = .loading
-    public var page: Int = 1
-    public var quotes: [Quote] = []
-    public var lastPage = false
+    public var status: Status
+    public var page: Int
+    public var quotes: [Quote]
+    public var lastPage: Bool
+
+    public init(
+      status: QuotesFeature.State.Status = .loading,
+      page: Int = 1,
+      quotes: [Quote] = [],
+      lastPage: Bool = false
+    ) {
+      self.status = status
+      self.page = page
+      self.quotes = quotes
+      self.lastPage = lastPage
+    }
   }
 
   public enum Action: Equatable {
@@ -24,11 +36,7 @@ public struct QuotesFeature: ReducerProtocol {
     case loadNext
     case loaded(QuotePage)
     case failure
-    case upvote(Int)
-    case downvote(Int)
-    case clearvote(Int)
-    case favorite(Int)
-    case unfavorite(Int)
+    case update(Int, QuoteRepository.UpdateQuoteType)
     case updateQuote(Int, Quote)
   }
 
@@ -61,12 +69,8 @@ public struct QuotesFeature: ReducerProtocol {
         return .none
 
       case .loadNext,
-          .upvote,
-          .favorite,
-          .downvote,
           .updateQuote,
-          .unfavorite,
-          .clearvote:
+          .update:
         return .none
       }
     }
@@ -85,50 +89,26 @@ public struct QuotesFeature: ReducerProtocol {
         state.status = .loading
         return .send(.start)
 
-      case let .upvote(id):
-        return .run { send in
-          do {
-            let quote = try await UseCases.upvoteQuote(id: id)
-            await send(.updateQuote(id, quote))
-          } catch {
-            await send(.failure)
-          }
+      case let .update(id, type):
+        let useCase: (Int) async throws -> Quote
+        switch type {
+        case .upvote:
+          useCase = UseCases.upvoteQuote
+        case .downvote:
+          useCase = UseCases.downvoteQuote
+        case .fav:
+          useCase = UseCases.favoriteQuote
+        case .unfav:
+          useCase = UseCases.unFavoriteQuote
+        case .clearvote:
+          useCase = UseCases.clearVoteQuote
+        default:
+          return .none
         }
 
-      case let .downvote(id):
         return .run { send in
           do {
-            let quote = try await UseCases.downvoteQuote(id: id)
-            await send(.updateQuote(id, quote))
-          } catch {
-            await send(.failure)
-          }
-        }
-
-      case let .favorite(id):
-        return .run { send in
-          do {
-            let quote = try await UseCases.favoriteQuote(id: id)
-            await send(.updateQuote(id, quote))
-          } catch {
-            await send(.failure)
-          }
-        }
-
-      case let .unfavorite(id):
-        return .run { send in
-          do {
-            let quote = try await UseCases.unFavoriteQuote(id: id)
-            await send(.updateQuote(id, quote))
-          } catch {
-            await send(.failure)
-          }
-        }
-
-      case let .clearvote(id):
-        return .run { send in
-          do {
-            let quote = try await UseCases.clearVoteQuote(id: id)
+            let quote = try await useCase(id)
             await send(.updateQuote(id, quote))
           } catch {
             await send(.failure)
@@ -164,12 +144,8 @@ public struct QuotesFeature: ReducerProtocol {
 
       case .failure,
           .loaded,
-          .upvote,
-          .favorite,
-          .downvote,
-          .updateQuote,
-          .unfavorite,
-          .clearvote:
+          .update,
+          .updateQuote:
         return .none
       }
     }

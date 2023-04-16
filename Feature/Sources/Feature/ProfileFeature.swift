@@ -39,13 +39,15 @@ public struct ProfileFeature: ReducerProtocol {
         guard case let .profile(user) = state else { return .none }
 
         state = .login(.loggedIn(user.login))
-        return .send(.login(.logOut))
+        return .none
 
       case .refresh:
+
+        guard case let .profile(user) = state else { return .none }
+
         return .run { send in
           do {
-            let login = try await UseCases.readSession().login
-            let user = try await UseCases.readUser(login: login)
+            let user = try await UseCases.readUser(login: user.login)
             await send(.loaded(user))
           } catch {
             return

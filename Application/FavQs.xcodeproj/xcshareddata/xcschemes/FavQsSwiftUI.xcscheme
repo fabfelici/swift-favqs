@@ -45,13 +45,6 @@
       <CodeCoverageTargets>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "Network"
-            BuildableName = "Network"
-            BlueprintName = "Network"
-            ReferencedContainer = "container:../Persistence">
-         </BuildableReference>
-         <BuildableReference
-            BuildableIdentifier = "primary"
             BlueprintIdentifier = "UIKitPresentation"
             BuildableName = "UIKitPresentation"
             BlueprintName = "UIKitPresentation"

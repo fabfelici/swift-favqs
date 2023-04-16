@@ -16,9 +16,17 @@ struct MainProfileView: View {
   var body: some View {
     NavigationView {
       SwitchStore(store) {
-        CaseLet(state: /ProfileFeature.State.login, action: ProfileFeature.Action.login, then: MainLoginView.init)
-        CaseLet(state: /ProfileFeature.State.profile, then: ProfileView.init)
+        CaseLet(
+          state: /ProfileFeature.State.login,
+          action: ProfileFeature.Action.login,
+          then: MainLoginView.init
+        )
+        CaseLet(
+          state: /ProfileFeature.State.profile,
+          then: ProfileView.init
+        )
       }
+      .navigationTitle("Profile")
     }
   }
 }
@@ -34,20 +42,30 @@ struct ProfileView: View {
   var body: some View {
     WithViewStore(store) { viewStore in
       Form {
-        Section(header: Text("FAVQS")) {
-          Text("Favorites: \(viewStore.state.publicFavoritesCount)")
-          Text("Followers: \(viewStore.state.followers)")
-          Text("Following: \(viewStore.state.following)")
-        }
-        Section(header: Text("ACCOUNT")) {
-          Text("Email: \(viewStore.state.accountDetails?.email ?? "")")
-          Text("Username: \(viewStore.state.login)")
-          Button("Log Out", role: .destructive) {
-            viewStore.send(.login(.logOut))
+        Section(
+          content: {
+            Text("Favorites: \(viewStore.publicFavoritesCount)")
+            Text("Followers: \(viewStore.followers)")
+            Text("Following: \(viewStore.following)")
+          },
+          header: {
+            Text("FAVQS")
           }
-        }
+        )
+
+        Section(
+          content: {
+            Text("Email: \(viewStore.accountDetails?.email ?? "")")
+            Text("Username: \(viewStore.login)")
+            Button("Log Out", role: .destructive) {
+              viewStore.send(.login(.logOut))
+            }
+          },
+          header: {
+            Text("ACCOUNT")
+          }
+        )
       }
-      .navigationTitle("Profile")
       .refreshable {
         viewStore.send(.refresh)
       }

@@ -1,6 +1,7 @@
 import Foundation
 
 public struct UpdateUserParameters {
+
   public let login: String?
   public let email: String?
   public let password: String?

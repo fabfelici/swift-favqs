@@ -63,8 +63,10 @@ struct LoginView: View {
           }
         }
       }
+      .onAppear {
+        viewStore.send(.start)
+      }
     }
-    .navigationTitle("Profile")
   }
 }
 
@@ -83,10 +85,6 @@ struct LoggingInView: View {
           Text("Logging In..")
         }
       }
-      .onAppear {
-        viewStore.send(.start)
-      }
-      .navigationTitle("Profile")
     }
   }
 }

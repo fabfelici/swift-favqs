@@ -12,6 +12,14 @@ public struct LoginFeature: ReducerProtocol {
     public struct LoginState: Equatable {
       public var userName: String
       public var password: String
+
+      public init(
+        userName: String = "",
+        password: String = ""
+      ) {
+        self.userName = userName
+        self.password = password
+      }
     }
   }
 
@@ -21,7 +29,7 @@ public struct LoginFeature: ReducerProtocol {
     case passwordText(String)
     case logIn
     case logOut
-    case error
+    case failure
     case loggedIn(String)
   }
 
@@ -31,25 +39,15 @@ public struct LoginFeature: ReducerProtocol {
 
       switch action {
 
-      case let .loggedIn(userName):
-        state = .loggedIn(userName)
+      case let .loggedIn(login):
+        state = .loggedIn(login)
         return .none
 
-      case .error, .logOut:
-        state = .login(.init(userName: "", password: ""))
+      case .failure, .logOut:
+        state = .login(.init())
         return .none
 
-      case .start:
-        return .run { send in
-          do {
-            let session = try await UseCases.readSession()
-            await send(.loggedIn(session.login))
-          } catch {
-            await send(.error)
-          }
-        }
-
-      case .logIn, .passwordText, .userNameText:
+      case .logIn, .passwordText, .userNameText, .start:
         return .none
       }
     }
@@ -69,7 +67,7 @@ public struct LoginFeature: ReducerProtocol {
             )
             await send(.loggedIn(session.login))
           } catch {
-            await send(.error)
+            await send(.failure)
           }
         }
 
@@ -81,11 +79,21 @@ public struct LoginFeature: ReducerProtocol {
         state = .login(.init(userName: userName, password: payload.password))
         return .none
 
-      case let .loggedIn(userName):
-        state = .loggedIn(userName)
+      case let .loggedIn(login):
+        state = .loggedIn(login)
         return .none
 
-      case .error, .logOut, .start:
+      case .start:
+        return .run { send in
+          do {
+            let session = try await UseCases.readSession()
+            await send(.loggedIn(session.login))
+          } catch {
+            await send(.failure)
+          }
+        }
+
+      case .failure, .logOut:
         return .none
       }
     }
@@ -102,11 +110,11 @@ public struct LoginFeature: ReducerProtocol {
             try await UseCases.destroySession()
             await send(.logOut)
           } catch {
-            await send(.error)
+            await send(.failure)
           }
         }
 
-      case .passwordText, .userNameText, .start, .error, .loggedIn, .logIn:
+      case .passwordText, .userNameText, .start, .failure, .loggedIn, .logIn:
         return .none
       }
     }

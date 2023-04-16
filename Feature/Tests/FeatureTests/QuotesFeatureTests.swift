@@ -2,6 +2,7 @@ import XCTest
 
 import ComposableArchitecture
 
+import Domain
 @testable import Feature
 
 @MainActor
@@ -39,7 +40,7 @@ final class QuotesFeatureTests: XCTestCase {
 
   func testRefreshWhenFailed() async {
     let feature = QuotesFeature()
-    let store = TestStore(initialState: QuotesFeature.State(status: .failed), reducer: feature)
+    let store = TestStore(initialState: .init(status: .failed), reducer: feature)
 
     await store.send(.start) {
       $0.status = .loading
@@ -51,5 +52,27 @@ final class QuotesFeatureTests: XCTestCase {
       $0.lastPage = true
       $0.quotes = [.mock]
     }
+  }
+
+  func testFavQuote() async {
+    let feature = QuotesFeature()
+    let store = TestStore(initialState: .init(status: .loaded, quotes: [.mock]), reducer: feature)
+
+    await store.send(.update(Quote.mock.id, .fav))
+    await store.receive(.updateQuote(Quote.mock.id, Quote.mock))
+  }
+
+  func testUpdateQuoteWithoutSession() async {
+    let feature = QuotesFeature()
+    let store = withDependencies {
+      $0.sessionRepository.read = {
+        throw RepositoryError(message: "123", errorCode: .userSessionNotFound)
+      }
+    } operation: {
+      TestStore(initialState: .init(status: .loaded, quotes: [.mock]), reducer: feature)
+    }
+
+    await store.send(.update(Quote.mock.id, .fav))
+    await store.receive(.failure)
   }
 }

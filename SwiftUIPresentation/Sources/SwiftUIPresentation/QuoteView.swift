@@ -4,26 +4,14 @@ import Domain
 
 struct QuoteView: View {
   private let quote: Quote
-  private let upvote: () -> Void
-  private let downvote: () -> Void
-  private let clearvote: () -> Void
-  private let favorite: () -> Void
-  private let unfavorite: () -> Void
+  private let update: (QuoteRepository.UpdateQuoteType) -> Void
 
   init(
     quote: Quote,
-    upvote: @escaping () -> Void,
-    downvote: @escaping () -> Void,
-    clearvote: @escaping () -> Void,
-    favorite: @escaping () -> Void,
-    unfavorite: @escaping () -> Void
+    update: @escaping (QuoteRepository.UpdateQuoteType) -> Void
   ) {
     self.quote = quote
-    self.upvote = upvote
-    self.downvote = downvote
-    self.clearvote = clearvote
-    self.favorite = favorite
-    self.unfavorite = unfavorite
+    self.update = update
   }
 
   var body: some View {
@@ -50,7 +38,7 @@ struct QuoteView: View {
           imageName: "arrow.up.circle\(quote.userDetails?.upvote ?? false ? ".fill" : "")",
           text: "\(quote.upvotesCount)",
           action: {
-            quote.userDetails?.upvote ?? false ? clearvote() : upvote()
+            quote.userDetails?.upvote ?? false ? update(.clearvote) : update(.upvote)
           }
         )
 
@@ -58,7 +46,7 @@ struct QuoteView: View {
           imageName: "heart.circle\(quote.userDetails?.favorite ?? false ? ".fill" : "")",
           text: "\(quote.favoritesCount)",
           action: {
-            quote.userDetails?.favorite ?? false ? self.unfavorite() : self.favorite()
+            quote.userDetails?.favorite ?? false ? update(.unfav) : update(.fav)
           }
         )
 
@@ -66,7 +54,7 @@ struct QuoteView: View {
           imageName: "arrow.down.circle\(quote.userDetails?.downvote ?? false ? ".fill" : "")",
           text: "\(quote.downvotesCount)",
           action: {
-            quote.userDetails?.downvote ?? false ? clearvote() : downvote()
+            quote.userDetails?.downvote ?? false ? update(.clearvote) : update(.downvote)
           }
         )
       }
@@ -116,11 +104,7 @@ struct QuoteView_Previews: PreviewProvider {
     List((0...5), id: \.self) { _ in
       QuoteView(
         quote: .mock,
-        upvote: {},
-        downvote: {},
-        clearvote: {},
-        favorite: {},
-        unfavorite: {}
+        update: { _ in }
       )
     }
   }

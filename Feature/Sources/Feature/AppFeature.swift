@@ -3,11 +3,17 @@ import ComposableArchitecture
 public struct AppFeature: ReducerProtocol {
 
   public struct State: Equatable {
-    public var quotes: QuotesFeature.State = .init()
+    public var quotes: QuotesFeature.State
 
-    public var profile: ProfileFeature.State = .login(.loggingIn)
+    public var profile: ProfileFeature.State
 
-    public init() { }
+    public init(
+      quotes: QuotesFeature.State = .init(),
+      profile: ProfileFeature.State = .login(.login(.init()))
+    ) {
+      self.quotes = quotes
+      self.profile = profile
+    }
   }
 
   public enum Action {

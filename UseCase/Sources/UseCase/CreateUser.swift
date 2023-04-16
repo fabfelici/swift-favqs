@@ -13,8 +13,7 @@ public extension UseCases {
   ) async throws {
     @Dependency(\.userRepository) var userRepository
     @Dependency(\.sessionRepository) var sessionRepository
-    let session = try await userRepository.create(login, email, password)
-    try await sessionRepository.update(session)
+    try await sessionRepository.update(userRepository.create(login, email, password))
   }
 
 }

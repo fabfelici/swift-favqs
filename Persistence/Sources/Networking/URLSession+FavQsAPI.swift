@@ -36,10 +36,7 @@ extension URLSession {
     do {
       return try decoder.decode(T.self, from: response.0)
     } catch {
-      if let error = try? decoder.decode(APIErrorDTO.self, from: response.0) {
-        throw RepositoryError(error)
-      }
-      throw error
+      throw RepositoryError(try decoder.decode(APIErrorDTO.self, from: response.0))
     }
   }
 

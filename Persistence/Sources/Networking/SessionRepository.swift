@@ -3,40 +3,51 @@ import Foundation
 import Domain
 
 public extension SessionRepository {
-  static let live = Self(
-    create: { username, password in
-      let dto = try await URLSession.shared.createSession(username: username, password: password)
-      try KeychainHelper.shared.save(dto, service: "session", account: "favqs")
-      return .init(dto)
-    },
-    read: {
-      .init(try KeychainHelper.shared.read(service: "session", account: "favqs"))
-    },
-    update: { session in
-      let dto = SessionDTO(userToken: session.userToken, login: session.login, email: session.userName)
-      try KeychainHelper.shared.save(dto, service: "session", account: "favqs")
-    },
-    destroy: {
-      let dto: SessionDTO = try KeychainHelper.shared.read(service: "session", account: "favqs")
-      _ = try await URLSession.shared.destroySession(session: .init(dto))
-      try KeychainHelper.shared.destroy(service: "session", account: "favqs")
-    }
-  )
+  static let live: SessionRepository = {
+    let helper = KeychainHelper(service: "session", account: "favqs")
+    return .init(
+      create: { username, password in
+        let dto = try await URLSession.shared.createSession(username: username, password: password)
+        try? helper.destroy()
+        try helper.save(dto)
+        return .init(dto)
+      },
+      read: {
+        .init(try helper.read())
+      },
+      update: { session in
+        let dto = SessionDTO(userToken: session.userToken, login: session.login, email: session.userName)
+        try? helper.destroy()
+        try helper.save(dto)
+      },
+      destroy: {
+        _ = try await URLSession.shared.destroySession(session: .init(helper.read()))
+        try helper.destroy()
+      }
+    )
+  }()
 }
 
 private final class KeychainHelper {
 
-  static let shared = KeychainHelper()
   private let encoder = JSONEncoder()
   private let decoder = JSONDecoder()
+  private let service: String
+  private let account: String
 
-  private init() { }
+  init(
+    service: String,
+    account: String
+  ) {
+    self.service = service
+    self.account = account
+  }
 
-  func save<T: Encodable>(_ object: T, service: String, account: String) throws {
+  func save<T: Encodable>(_ object: T) throws {
     let data = try encoder.encode(object)
     let query = [
-      kSecAttrService: service,
-      kSecAttrAccount: account,
+      kSecAttrService: self.service,
+      kSecAttrAccount: self.account,
       kSecClass: kSecClassGenericPassword,
       kSecValueData: data
     ] as [CFString : Any] as CFDictionary
@@ -48,10 +59,10 @@ private final class KeychainHelper {
     }
   }
 
-  func destroy(service: String, account: String) throws {
+  func destroy() throws {
     let query = [
-      kSecAttrService: service,
-      kSecAttrAccount: account,
+      kSecAttrService: self.service,
+      kSecAttrAccount: self.account,
       kSecClass: kSecClassGenericPassword,
     ] as [CFString : Any] as CFDictionary
 
@@ -62,10 +73,10 @@ private final class KeychainHelper {
     }
   }
 
-  func read<T: Decodable>(service: String, account: String) throws -> T {
+  func read<T: Decodable>() throws -> T {
     let query = [
-      kSecAttrService: service,
-      kSecAttrAccount: account,
+      kSecAttrService: self.service,
+      kSecAttrAccount: self.account,
       kSecClass: kSecClassGenericPassword,
       kSecReturnData: true
     ] as [CFString : Any] as CFDictionary

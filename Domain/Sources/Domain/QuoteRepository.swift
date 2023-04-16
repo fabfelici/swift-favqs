@@ -2,7 +2,7 @@ import Foundation
 
 public struct QuoteRepository {
 
-  public enum UpdateQuoteType {
+  public enum UpdateQuoteType: Equatable {
     case fav
     case unfav
     case upvote

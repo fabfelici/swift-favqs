@@ -14,26 +14,14 @@ struct QuotesView: View {
 
   var body: some View {
     WithViewStore(store) { viewStore in
-      let quotes = viewStore.state.quotes
       NavigationView {
         ZStack(alignment: .top) {
-          List(Array(quotes.enumerated()), id: \.offset) { value in
+          let quotes = viewStore.quotes
+          List(Array(quotes.enumerated()), id: \.element.id) { value in
             QuoteView(
               quote: value.element,
-              upvote: {
-                viewStore.send(.upvote(value.element.id))
-              },
-              downvote: {
-                viewStore.send(.downvote(value.element.id))
-              },
-              clearvote: {
-                viewStore.send(.clearvote(value.element.id))
-              },
-              favorite: {
-                viewStore.send(.favorite(value.element.id))
-              },
-              unfavorite: {
-                viewStore.send(.unfavorite(value.element.id))
+              update: { type in
+                viewStore.send(.update(value.element.id, type))
               }
             )
             .onAppear {
@@ -53,7 +41,13 @@ struct QuotesView: View {
               }
             }
           }
-          if viewStore.state.status == .failed {
+          .onAppear {
+            if quotes.isEmpty {
+              viewStore.send(.start)
+            }
+          }
+
+          if viewStore.status == .failed {
             Text("Connection Issues")
               .fontWeight(.medium)
               .font(.callout)
@@ -65,11 +59,6 @@ struct QuotesView: View {
               )
               .background(.red)
           }
-        }
-      }
-      .onAppear {
-        if viewStore.quotes.isEmpty {
-          viewStore.send(.start)
         }
       }
     }
