@@ -15,15 +15,11 @@ final class ProfileFeatureTests: XCTestCase {
       reducer: feature
     )
 
-    await store.send(.login(.logIn)) {
+    await store.send(.login(.login)) {
       $0 = .login(.loggingIn)
     }
 
-    await store.receive(.login(.loggedIn(Session.mock.login))) {
-      $0 = .login(.loggedIn(Session.mock.login))
-    }
-
-    await store.receive(.loaded(.mock)) {
+    await store.receive(.login(.loggedIn(.mock))) {
       $0 = .profile(.mock)
     }
   }
@@ -35,11 +31,15 @@ final class ProfileFeatureTests: XCTestCase {
       reducer: feature
     )
 
-    await store.send(.login(.logOut)) {
+    await store.send(.logout) {
+      $0 = .login(.loggedIn(.mock))
+    }
+
+    await store.receive(.login(.logout)) {
       $0 = .login(.loggingIn)
     }
 
-    await store.receive(.login(.logOut)) {
+    await store.receive(.login(.logout)) {
       $0 = .login(.login(.init(userName: "", password: "")))
     }
   }
@@ -53,12 +53,20 @@ final class ProfileFeatureTests: XCTestCase {
 
     await store.send(.login(.start))
 
-    await store.receive(.login(.loggedIn(Session.mock.login))) {
-      $0 = .login(.loggedIn(Session.mock.login))
-    }
-
-    await store.receive(.loaded(.mock)) {
+    await store.receive(.login(.loggedIn(.mock))) {
       $0 = .profile(.mock)
     }
+  }
+
+  func testRefreshOnAppear() async {
+    let feature = ProfileFeature()
+    let store = TestStore(
+      initialState: .profile(.mock),
+      reducer: feature
+    )
+
+    await store.send(.refresh)
+
+    await store.receive(.loaded(.mock))
   }
 }

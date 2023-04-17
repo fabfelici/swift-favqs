@@ -6,9 +6,9 @@ import Domain
 
 public extension UseCases {
 
-  static func readSession() async throws -> Session {
+  static func logout() async throws {
     @Dependency(\.sessionRepository) var sessionRepository
-    return try await sessionRepository.read()
+    try await sessionRepository.destroy()
   }
 
 }

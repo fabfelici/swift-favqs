@@ -13,41 +13,31 @@ public struct ProfileFeature: ReducerProtocol {
   public enum Action: Equatable {
     case login(LoginFeature.Action)
     case loaded(User)
+    case logout
     case refresh
   }
 
   public var body: some ReducerProtocol<State, Action> {
 
+    Scope(state: /ProfileFeature.State.login, action: /Action.login, child: LoginFeature.init)
+
     Reduce { state, action in
       switch action {
-      case let .login(.loggedIn(login)):
-        return .run { send in
-          do {
-            let user = try await UseCases.readUser(login: login)
-            await send(.loaded(user))
-          } catch {
-            return
-          }
-        }
-
-      case let .loaded(user):
+      case let .login(.loggedIn(user)), let .loaded(user):
         state = .profile(user)
         return .none
 
-      case .login(.logOut):
+      case .logout:
 
         guard case let .profile(user) = state else { return .none }
 
-        state = .login(.loggedIn(user.login))
-        return .none
+        state = .login(.loggedIn(user))
+        return .send(.login(.logout))
 
       case .refresh:
-
-        guard case let .profile(user) = state else { return .none }
-
         return .run { send in
           do {
-            let user = try await UseCases.readUser(login: user.login)
+            let user = try await UseCases.readUser(login: nil)
             await send(.loaded(user))
           } catch {
             return
@@ -58,7 +48,5 @@ public struct ProfileFeature: ReducerProtocol {
         return .none
       }
     }
-
-    Scope(state: /ProfileFeature.State.login, action: /Action.login, child: LoginFeature.init)
   }
 }

@@ -58,7 +58,7 @@ struct ProfileView: View {
             Text("Email: \(viewStore.accountDetails?.email ?? "")")
             Text("Username: \(viewStore.login)")
             Button("Log Out", role: .destructive) {
-              viewStore.send(.login(.logOut))
+              viewStore.send(.logout)
             }
           },
           header: {

@@ -23,27 +23,27 @@ final class LoginFeatureTests: XCTestCase {
       $0 = .login(.init(userName: "Test", password: "Password"))
     }
 
-    await store.send(.logIn) {
+    await store.send(.login) {
       $0 = .loggingIn
     }
 
-    await store.receive(.loggedIn(Session.mock.login)) {
-      $0 = .loggedIn(Session.mock.login)
+    await store.receive(.loggedIn(.mock)) {
+      $0 = .loggedIn(.mock)
     }
   }
 
   func testLogout() async {
     let feature = LoginFeature()
     let store = TestStore(
-      initialState: .loggedIn("Test"),
+      initialState: .loggedIn(.mock),
       reducer: feature
     )
 
-    await store.send(.logOut) {
+    await store.send(.logout) {
       $0 = .loggingIn
     }
 
-    await store.receive(.logOut) {
+    await store.receive(.logout) {
       $0 = .login(.init(userName: "", password: ""))
     }
   }
@@ -57,8 +57,8 @@ final class LoginFeatureTests: XCTestCase {
 
     await store.send(.start)
 
-    await store.receive(.loggedIn(Session.mock.login)) {
-      $0 = .loggedIn(Session.mock.login)
+    await store.receive(.loggedIn(.mock)) {
+      $0 = .loggedIn(.mock)
     }
   }
 }

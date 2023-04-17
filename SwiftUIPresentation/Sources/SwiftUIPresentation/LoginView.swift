@@ -36,7 +36,7 @@ struct LoginView: View {
       Form {
         Section(header: Text("ACCOUNT")) {
           TextField(
-            "Username",
+            "Username or Email",
             text: viewStore.binding(
               get: \.userName,
               send: LoginFeature.Action.userNameText
@@ -59,7 +59,7 @@ struct LoginView: View {
           .textContentType(.password)
 
           Button("Log In") {
-            viewStore.send(.logIn)
+            viewStore.send(.login)
           }
         }
       }
