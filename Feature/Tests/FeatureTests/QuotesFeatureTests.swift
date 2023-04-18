@@ -82,12 +82,8 @@ final class QuotesFeatureTests: XCTestCase {
   func testUpdateQuoteWithoutSession() async {
     let error = RepositoryError(message: "123", errorCode: .userSessionNotFound)
     let feature = QuotesFeature()
-    let store = withDependencies {
-      $0.sessionRepository.read = { throw error }
-    } operation: {
-      TestStore(initialState: .init(status: .loaded, quotes: [.mock]), reducer: feature)
-    }
-
+    let store = TestStore(initialState: .init(status: .loaded, quotes: [.mock]), reducer: feature)
+    store.dependencies.sessionRepository.read = { throw error }
     await store.send(.update(Quote.mock.id, .fav))
     await store.receive(.updateQuote(.failure(error)))
   }
