@@ -6,7 +6,7 @@ import PackageDescription
 var package = Package(
   name: "SwiftUIPresentation",
   platforms: [
-    .iOS(.v15),
+    .iOS(.v16),
     .macOS(.v12)
   ],
   products: [

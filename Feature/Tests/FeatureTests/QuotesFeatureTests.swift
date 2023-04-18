@@ -9,12 +9,18 @@ import Domain
 final class QuotesFeatureTests: XCTestCase {
 
   func testLoading() async {
-    let feature = QuotesFeature()
+    let clock = TestClock()
+    let feature = withDependencies {
+      $0.continuousClock = clock
+    } operation: {
+      QuotesFeature()
+    }
+
     let store = TestStore(initialState: .init(), reducer: feature)
 
     await store.send(.start)
-
-    await store.receive(.loaded(.init(quotes: [.mock], lastPage: true))) {
+    await clock.advance(by: .seconds(0.3))
+    await store.receive(.loaded(.success(.init(quotes: [.mock], lastPage: true)))) {
       $0.page = 1
       $0.status = .loaded
       $0.lastPage = true
@@ -23,12 +29,17 @@ final class QuotesFeatureTests: XCTestCase {
   }
 
   func testNotLoadingIfLastPage() async {
-    let feature = QuotesFeature()
+    let clock = TestClock()
+    let feature = withDependencies {
+      $0.continuousClock = clock
+    } operation: {
+      QuotesFeature()
+    }
     let store = TestStore(initialState: .init(), reducer: feature)
 
     await store.send(.start)
-
-    await store.receive(.loaded(.init(quotes: [.mock], lastPage: true))) {
+    await clock.advance(by: .seconds(0.3))
+    await store.receive(.loaded(.success(.init(quotes: [.mock], lastPage: true)))) {
       $0.page = 1
       $0.status = .loaded
       $0.lastPage = true
@@ -39,14 +50,20 @@ final class QuotesFeatureTests: XCTestCase {
   }
 
   func testRefreshWhenFailed() async {
-    let feature = QuotesFeature()
+    let clock = TestClock()
+    let feature = withDependencies {
+      $0.continuousClock = clock
+    } operation: {
+      QuotesFeature()
+    }
     let store = TestStore(initialState: .init(status: .failed), reducer: feature)
 
     await store.send(.start) {
       $0.status = .loading
     }
     await store.receive(.start)
-    await store.receive(.loaded(.init(quotes: [.mock], lastPage: true))) {
+    await clock.advance(by: .seconds(0.3))
+    await store.receive(.loaded(.success(.init(quotes: [.mock], lastPage: true)))) {
       $0.page = 1
       $0.status = .loaded
       $0.lastPage = true
@@ -59,20 +76,42 @@ final class QuotesFeatureTests: XCTestCase {
     let store = TestStore(initialState: .init(status: .loaded, quotes: [.mock]), reducer: feature)
 
     await store.send(.update(Quote.mock.id, .fav))
-    await store.receive(.updateQuote(Quote.mock.id, Quote.mock))
+    await store.receive(.updateQuote(.success(Quote.mock)))
   }
 
   func testUpdateQuoteWithoutSession() async {
+    let error = RepositoryError(message: "123", errorCode: .userSessionNotFound)
     let feature = QuotesFeature()
     let store = withDependencies {
-      $0.sessionRepository.read = {
-        throw RepositoryError(message: "123", errorCode: .userSessionNotFound)
-      }
+      $0.sessionRepository.read = { throw error }
     } operation: {
       TestStore(initialState: .init(status: .loaded, quotes: [.mock]), reducer: feature)
     }
 
     await store.send(.update(Quote.mock.id, .fav))
-    await store.receive(.failure)
+    await store.receive(.updateQuote(.failure(error)))
+  }
+
+  func testSearch() async {
+    let clock = TestClock()
+    let feature = withDependencies {
+      $0.continuousClock = clock
+    } operation: {
+      QuotesFeature()
+    }
+    let store = TestStore(initialState: .init(status: .loaded), reducer: feature)
+
+    await store.send(.searchText("Text")) {
+      $0 = .init()
+      $0.searchText = "Text"
+    }
+    await store.receive(.start)
+    await clock.advance(by: .seconds(0.3))
+    await store.receive(.loaded(.success(.init(quotes: [.mock], lastPage: true)))) {
+      $0.page = 1
+      $0.status = .loaded
+      $0.lastPage = true
+      $0.quotes = [.mock]
+    }
   }
 }

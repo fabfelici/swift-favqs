@@ -17,52 +17,75 @@ public struct QuotesFeature: ReducerProtocol {
     public var page: Int
     public var quotes: [Quote]
     public var lastPage: Bool
+    public var searchText: String
 
     public init(
       status: QuotesFeature.State.Status = .loading,
       page: Int = 1,
       quotes: [Quote] = [],
-      lastPage: Bool = false
+      lastPage: Bool = false,
+      searchText: String = ""
     ) {
       self.status = status
       self.page = page
       self.quotes = quotes
       self.lastPage = lastPage
+      self.searchText = searchText
     }
   }
 
   public enum Action: Equatable {
     case start
     case loadNext
-    case loaded(QuotePage)
-    case failure
+    case loaded(TaskResult<QuotePage>)
     case update(Int, QuoteRepository.UpdateQuoteType)
-    case updateQuote(Int, Quote)
+    case updateQuote(TaskResult<Quote>)
+    case searchText(String)
   }
 
+  @Dependency(\.continuousClock) var clock
+
+  enum CancelQuotesId { }
+
   public var body: some ReducerProtocol<State, Action> {
+
+    Reduce { state, action in
+      switch action {
+      case let .searchText(text):
+        state = .init()
+        state.searchText = text
+        return .send(.start)
+      default:
+        return .none
+      }
+    }
 
     Reduce { state, action in
       guard case .loading = state.status else { return .none }
 
       switch action {
       case .start:
-        return .task { [page = state.page] in
-        do {
-          let page = try await UseCases.quotes(
-            parameters: .init(page: page)
-          )
-          return .loaded(page)
-        } catch {
-          return .failure
+        return .task { [state = state] in
+          try await withTaskCancellation(id: CancelQuotesId.self, cancelInFlight: true) {
+            try await self.clock.sleep(for: .seconds(0.3))
+            return await .loaded(
+              TaskResult {
+                try await UseCases.quotes(
+                  parameters: .init(
+                    filter: state.searchText,
+                    page: state.page
+                  )
+                )
+              }
+            )
+          }
         }
-      }
 
-      case .failure:
+      case .loaded(.failure):
         state.status = .failed
         return .none
 
-      case let .loaded(page):
+      case let .loaded(.success(page)):
         state.status = .loaded
         state.lastPage = page.lastPage
         state.quotes += page.quotes
@@ -70,7 +93,8 @@ public struct QuotesFeature: ReducerProtocol {
 
       case .loadNext,
           .updateQuote,
-          .update:
+          .update,
+          .searchText:
         return .none
       }
     }
@@ -90,25 +114,21 @@ public struct QuotesFeature: ReducerProtocol {
         return .send(.start)
 
       case let .update(id, type):
-        return .run { send in
-          do {
-            let quote = try await UseCases.updateQuote(id: id, type: type)
-            await send(.updateQuote(id, quote))
-          } catch {
-            await send(.failure)
-          }
+        return .task {
+          await .updateQuote(TaskResult { try await UseCases.updateQuote(id: id, type: type) })
         }
 
-      case let .updateQuote(id, newQuote):
-        let firstIndex = state.quotes.firstIndex(where: {
-          $0.id == id
-        })
-        if let index = firstIndex {
-          state.quotes[index] = newQuote
+      case let .updateQuote(.success(newQuote)):
+        if let firstIndex = state.quotes.firstIndex(where: {
+          $0.id == newQuote.id
+        }) {
+          state.quotes[firstIndex] = newQuote
         }
         return .none
 
-      case .loaded, .failure:
+      case .loaded,
+          .updateQuote(.failure),
+          .searchText:
         return .none
       }
     }
@@ -126,10 +146,10 @@ public struct QuotesFeature: ReducerProtocol {
         state.status = .loading
         return .send(.start)
 
-      case .failure,
-          .loaded,
+      case .loaded,
           .update,
-          .updateQuote:
+          .updateQuote,
+          .searchText:
         return .none
       }
     }

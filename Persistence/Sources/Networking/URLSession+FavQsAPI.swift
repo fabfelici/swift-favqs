@@ -200,7 +200,17 @@ extension QuotesParameters {
       .init(
         name: "page",
         value: page.map(String.init)
-      )
+      ),
+      filter.flatMap {
+        guard !$0.isEmpty else {
+          return nil
+        }
+        return .init(
+          name: "filter",
+          value: $0
+        )
+      }
     ]
+    .compactMap { $0 }
   }
 }

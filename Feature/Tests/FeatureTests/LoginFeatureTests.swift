@@ -27,7 +27,7 @@ final class LoginFeatureTests: XCTestCase {
       $0 = .loggingIn
     }
 
-    await store.receive(.loggedIn(.mock)) {
+    await store.receive(.loggedIn(.success(.mock))) {
       $0 = .loggedIn(.mock)
     }
   }
@@ -57,7 +57,7 @@ final class LoginFeatureTests: XCTestCase {
 
     await store.send(.start)
 
-    await store.receive(.loggedIn(.mock)) {
+    await store.receive(.loggedIn(.success(.mock))) {
       $0 = .loggedIn(.mock)
     }
   }

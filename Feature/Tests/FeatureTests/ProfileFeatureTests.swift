@@ -19,7 +19,7 @@ final class ProfileFeatureTests: XCTestCase {
       $0 = .login(.loggingIn)
     }
 
-    await store.receive(.login(.loggedIn(.mock))) {
+    await store.receive(.login(.loggedIn(.success(.mock)))) {
       $0 = .profile(.mock)
     }
   }
@@ -53,7 +53,7 @@ final class ProfileFeatureTests: XCTestCase {
 
     await store.send(.login(.start))
 
-    await store.receive(.login(.loggedIn(.mock))) {
+    await store.receive(.login(.loggedIn(.success(.mock)))) {
       $0 = .profile(.mock)
     }
   }
@@ -67,6 +67,6 @@ final class ProfileFeatureTests: XCTestCase {
 
     await store.send(.refresh)
 
-    await store.receive(.loaded(.mock))
+    await store.receive(.loaded(.success(.mock)))
   }
 }

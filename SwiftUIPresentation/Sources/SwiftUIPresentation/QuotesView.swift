@@ -31,6 +31,11 @@ struct QuotesView: View {
             }
           }
           .navigationTitle("Quotes")
+          .onAppear {
+            if quotes.isEmpty {
+              viewStore.send(.start)
+            }
+          }
           .refreshable {
             await viewStore.send(.start) {
               switch $0.status {
@@ -41,11 +46,12 @@ struct QuotesView: View {
               }
             }
           }
-          .onAppear {
-            if quotes.isEmpty {
-              viewStore.send(.start)
-            }
-          }
+          .searchable(
+            text: viewStore.binding(
+              get: { $0.searchText },
+              send: QuotesFeature.Action.searchText
+            )
+          )
 
           if viewStore.status == .failed {
             Text("Connection Issues")

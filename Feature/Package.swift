@@ -6,7 +6,7 @@ import PackageDescription
 var package = Package(
   name: "Feature",
   platforms: [
-    .iOS(.v13),
+    .iOS(.v16),
     .macOS(.v11)
   ],
   products: [
