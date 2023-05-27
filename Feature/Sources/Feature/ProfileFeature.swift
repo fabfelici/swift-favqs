@@ -14,6 +14,7 @@ public struct ProfileFeature: ReducerProtocol {
     case login(LoginFeature.Action)
     case loaded(TaskResult<User>)
     case logout
+    case loggedOut
     case refresh
   }
 
@@ -28,20 +29,24 @@ public struct ProfileFeature: ReducerProtocol {
         return .none
 
       case .logout:
-
-        guard case let .profile(user) = state else { return .none }
-
-        state = .login(.loggedIn(user))
-        return .send(.login(.logout))
+        state = .login(.loggingIn)
+        return .task {
+          try await UseCases.logout()
+          return .loggedOut
+        }
 
       case .refresh:
         return .task {
           await .loaded(
-            TaskResult {
+            .init {
               try await UseCases.readUser()
             }
           )
         }
+
+      case .loggedOut:
+        state = .login(.login(.init()))
+        return .none
 
       default:
         return .none

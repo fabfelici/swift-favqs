@@ -26,7 +26,7 @@ public struct AppFeature: ReducerProtocol {
   public var body: some ReducerProtocol<State, Action> {
     Reduce { state, action in
       switch action {
-      case .profile(.login(.logout)), .profile(.login(.loggedIn(.success))):
+      case .profile(.loggedOut), .profile(.login(.loggedIn(.success))):
         state.quotes = .init()
         return .none
 

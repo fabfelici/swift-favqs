@@ -140,8 +140,7 @@ extension URLSession {
   func updateUser(login: String, parameters: UpdateUserParameters, session: Session) async throws -> UpdateUserDTO {
     let urlString = baseURL + Endpoint.users.rawValue + "/\(login)"
     var request = try put(session, urlString)
-    let encoder = JSONEncoder()
-    encoder.keyEncodingStrategy = .convertToSnakeCase
+    let encoder = with(JSONEncoder(), set(\.keyEncodingStrategy, .convertToSnakeCase))
     request.httpBody = try encoder.encode(UpdateUserRequestDTO(parameters))
     return try await decoded(for: request)
   }

@@ -8,7 +8,6 @@ public struct LoginFeature: ReducerProtocol {
   public enum State: Equatable {
     case login(LoginState)
     case loggingIn
-    case loggedIn(User)
 
     public struct LoginState: Equatable {
       public var userName: String
@@ -29,7 +28,6 @@ public struct LoginFeature: ReducerProtocol {
     case userNameText(String)
     case passwordText(String)
     case login
-    case logout
     case loggedIn(TaskResult<User>)
   }
 
@@ -39,15 +37,11 @@ public struct LoginFeature: ReducerProtocol {
 
       switch action {
 
-      case let .loggedIn(.success(user)):
-        state = .loggedIn(user)
-        return .none
-
-      case .loggedIn(.failure), .logout:
+      case .loggedIn(.failure):
         state = .login(.init())
         return .none
 
-      case .login, .passwordText, .userNameText, .start:
+      case .login, .passwordText, .userNameText, .start, .loggedIn(.success):
         return .none
       }
     }
@@ -78,10 +72,6 @@ public struct LoginFeature: ReducerProtocol {
         state = .login(.init(userName: userName, password: payload.password))
         return .none
 
-      case let .loggedIn(.success(user)):
-        state = .loggedIn(user)
-        return .none
-
       case .start:
         return .task {
           await .loggedIn(
@@ -91,24 +81,7 @@ public struct LoginFeature: ReducerProtocol {
           )
         }
 
-      case .loggedIn(.failure), .logout:
-        return .none
-      }
-    }
-
-    Reduce { state, action in
-      guard case .loggedIn = state else { return .none }
-
-      switch action {
-
-      case .logout:
-        state = .loggingIn
-        return .run { send in
-          try await UseCases.logout()
-          await send(.logout)
-        }
-
-      case .passwordText, .userNameText, .start, .loggedIn, .login:
+      case .loggedIn:
         return .none
       }
     }

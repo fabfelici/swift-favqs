@@ -32,14 +32,10 @@ final class ProfileFeatureTests: XCTestCase {
     )
 
     await store.send(.logout) {
-      $0 = .login(.loggedIn(.mock))
-    }
-
-    await store.receive(.login(.logout)) {
       $0 = .login(.loggingIn)
     }
 
-    await store.receive(.login(.logout)) {
+    await store.receive(.loggedOut) {
       $0 = .login(.login(.init(userName: "", password: "")))
     }
   }
