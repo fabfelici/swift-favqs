@@ -61,7 +61,7 @@ final class QuotesFeatureTests: XCTestCase {
     await store.send(.start) {
       $0.status = .loading
     }
-    await store.receive(.start)
+
     await clock.advance(by: .seconds(0.3))
     await store.receive(.loaded(.success(.init(quotes: [.mock], lastPage: true)))) {
       $0.page = 1
@@ -101,7 +101,7 @@ final class QuotesFeatureTests: XCTestCase {
       $0 = .init()
       $0.searchText = "Text"
     }
-    await store.receive(.start)
+
     await clock.advance(by: .seconds(0.3))
     await store.receive(.loaded(.success(.init(quotes: [.mock], lastPage: true)))) {
       $0.page = 1

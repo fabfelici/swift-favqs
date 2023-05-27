@@ -3,6 +3,8 @@ import ComposableArchitecture
 import Domain
 import UseCase
 
+extension Quote: Identifiable { }
+
 public struct QuotesFeature: ReducerProtocol {
 
   public struct State: Equatable {
@@ -15,7 +17,7 @@ public struct QuotesFeature: ReducerProtocol {
 
     public var status: Status
     public var page: Int
-    public var quotes: [Quote]
+    public var quotes: IdentifiedArrayOf<Quote>
     public var lastPage: Bool
     public var searchText: String
 
@@ -28,7 +30,7 @@ public struct QuotesFeature: ReducerProtocol {
     ) {
       self.status = status
       self.page = page
-      self.quotes = quotes
+      self.quotes = .init(uniqueElements: quotes)
       self.lastPage = lastPage
       self.searchText = searchText
     }
@@ -38,7 +40,7 @@ public struct QuotesFeature: ReducerProtocol {
     case start
     case loadNext
     case loaded(TaskResult<QuotePage>)
-    case update(Int, QuoteRepository.UpdateQuoteType)
+    case update(Quote.ID, QuoteRepository.UpdateQuoteType)
     case updateQuote(TaskResult<Quote>)
     case searchText(String)
   }
@@ -54,7 +56,8 @@ public struct QuotesFeature: ReducerProtocol {
       case let .searchText(text):
         state = .init()
         state.searchText = text
-        return .send(.start)
+        return load(state: &state)
+
       default:
         return .none
       }
@@ -65,21 +68,7 @@ public struct QuotesFeature: ReducerProtocol {
 
       switch action {
       case .start:
-        return .task { [state = state] in
-          try await withTaskCancellation(id: CancelQuotesId.self, cancelInFlight: true) {
-            try await self.clock.sleep(for: .seconds(0.3))
-            return await .loaded(
-              TaskResult {
-                try await UseCases.quotes(
-                  parameters: .init(
-                    filter: state.searchText,
-                    page: state.page
-                  )
-                )
-              }
-            )
-          }
-        }
+        return load(state: &state)
 
       case .loaded(.failure):
         state.status = .failed
@@ -104,26 +93,28 @@ public struct QuotesFeature: ReducerProtocol {
 
       switch action {
       case .start:
+        let searchText = state.searchText
         state = .init()
-        return .send(.start)
+        state.searchText = searchText
+        return load(state: &state)
 
       case .loadNext:
         guard !state.lastPage else { return .none }
         state.page += 1
         state.status = .loading
-        return .send(.start)
+        return load(state: &state)
 
       case let .update(id, type):
         return .task {
-          await .updateQuote(TaskResult { try await UseCases.updateQuote(id: id, type: type) })
+          await .updateQuote(
+            .init {
+              try await UseCases.updateQuote(id: id, type: type)
+            }
+          )
         }
 
       case let .updateQuote(.success(newQuote)):
-        if let firstIndex = state.quotes.firstIndex(where: {
-          $0.id == newQuote.id
-        }) {
-          state.quotes[firstIndex] = newQuote
-        }
+        state.quotes[id: newQuote.id] = newQuote
         return .none
 
       case .loaded,
@@ -139,12 +130,12 @@ public struct QuotesFeature: ReducerProtocol {
       switch action {
       case .start:
         state = .init()
-        return .send(.start)
+        return load(state: &state)
 
       case .loadNext:
         guard !state.lastPage else { return .none }
         state.status = .loading
-        return .send(.start)
+        return load(state: &state)
 
       case .loaded,
           .update,
@@ -153,5 +144,22 @@ public struct QuotesFeature: ReducerProtocol {
         return .none
       }
     }
+  }
+
+  private func load(state: inout State) -> EffectTask<Action> {
+    return .task { [state = state] in
+      try await self.clock.sleep(for: .seconds(0.3))
+      return await .loaded(
+        .init {
+          try await UseCases.quotes(
+            parameters: .init(
+              filter: state.searchText,
+              page: state.page
+            )
+          )
+        }
+      )
+    }
+    .cancellable(id: CancelQuotesId.self, cancelInFlight: true)
   }
 }

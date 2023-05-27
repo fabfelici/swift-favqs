@@ -16,23 +16,22 @@ struct QuotesView: View {
     WithViewStore(store) { viewStore in
       NavigationView {
         ZStack(alignment: .top) {
-          let quotes = viewStore.quotes
-          List(Array(quotes.enumerated()), id: \.element.id) { value in
+          List(viewStore.quotes, id: \.id) { value in
             QuoteView(
-              quote: value.element,
+              quote: value,
               update: { type in
-                viewStore.send(.update(value.element.id, type))
+                viewStore.send(.update(value.id, type))
               }
             )
             .onAppear {
-              if value.offset == quotes.count - 1 {
+              if value.id == viewStore.quotes.last?.id {
                 viewStore.send(.loadNext)
               }
             }
           }
           .navigationTitle("Quotes")
           .onAppear {
-            if quotes.isEmpty {
+            if viewStore.quotes.isEmpty {
               viewStore.send(.start)
             }
           }
