@@ -19,14 +19,18 @@ public struct QuoteRepository {
 
   public var update: (_ id: Int, _ updateType: UpdateQuoteType, _ session: Session) async throws -> Quote
 
+  public var create: (_ author: String, _ body: String, _ session: Session) async throws -> Quote
+
   public init(
     quotes: @escaping (QuotesParameters?, Session?) async throws -> QuotePage,
     read: @escaping (Int, Session?) async throws -> Quote,
-    update: @escaping (_ id: Int, _ updateType: UpdateQuoteType, _ session: Session) async throws -> Quote
+    update: @escaping (Int, UpdateQuoteType, Session) async throws -> Quote,
+    create: @escaping (String, String, Session) async throws -> Quote
   ) {
     self.quotes = quotes
     self.read = read
     self.update = update
+    self.create = create
   }
 
 }
@@ -41,6 +45,9 @@ public extension QuoteRepository {
       .mock
     },
     update: { _, _, _ in
+      .mock
+    },
+    create: { _, _, _ in
       .mock
     }
   )

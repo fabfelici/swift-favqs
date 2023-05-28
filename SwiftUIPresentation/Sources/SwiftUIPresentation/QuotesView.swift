@@ -1,7 +1,6 @@
 import SwiftUI
 
 import ComposableArchitecture
-
 import Feature
 
 struct QuotesView: View {
@@ -14,56 +13,65 @@ struct QuotesView: View {
 
   var body: some View {
     WithViewStore(store) { viewStore in
-      NavigationView {
-        ZStack(alignment: .top) {
-          List(viewStore.quotes, id: \.id) { value in
-            QuoteView(
-              quote: value,
-              update: { type in
-                viewStore.send(.update(value.id, type))
-              }
-            )
-            .onAppear {
-              if value.id == viewStore.quotes.last?.id {
-                viewStore.send(.loadNext)
-              }
+      ZStack(alignment: .top) {
+        List(viewStore.quotes, id: \.id) { value in
+          QuoteView(
+            quote: value,
+            update: { type in
+              viewStore.send(.update(value.id, type))
             }
-          }
-          .navigationTitle("Quotes")
-          .onAppear {
-            if viewStore.quotes.isEmpty {
-              viewStore.send(.start)
-            }
-          }
-          .refreshable {
-            await viewStore.send(.start) {
-              switch $0.status {
-              case .loading:
-                return true
-              case .loaded, .failed:
-                return false
-              }
-            }
-          }
-          .searchable(
-            text: viewStore.binding(
-              get: { $0.searchText },
-              send: QuotesFeature.Action.searchText
-            )
           )
-
-          if viewStore.status == .failed {
-            Text("Connection Issues")
-              .fontWeight(.medium)
-              .font(.callout)
-              .frame(
-                maxWidth: .infinity,
-                minHeight: 50,
-                maxHeight: 50,
-                alignment: .center
-              )
-              .background(.red)
+          .onAppear {
+            if value.id == viewStore.quotes.last?.id {
+              viewStore.send(.loadNext)
+            }
           }
+        }
+        .onAppear {
+          if viewStore.quotes.isEmpty {
+            viewStore.send(.start)
+          }
+        }
+        .refreshable {
+          await viewStore.send(.start) {
+            switch $0.status {
+            case .loading:
+              return true
+            case .loaded, .failed:
+              return false
+            }
+          }
+        }
+        .searchable(
+          text: viewStore.binding(
+            get: { $0.searchText },
+            send: QuotesFeature.Action.searchText
+          )
+        )
+        .navigationTitle("Quotes")
+        .sheet(
+          isPresented: viewStore.binding(
+            get: \.creatingQuote,
+            send: { $0 ? .presentCreateQuote : .dismissCreateQuote }
+          )
+        ) {
+          IfLetStore(
+            self.store.scope(state: \.createQuoteState, action: QuotesFeature.Action.createQuote),
+            then: CreateQuoteView.init
+          )
+        }
+
+        if viewStore.status == .failed {
+          Text("Connection Issues")
+            .fontWeight(.medium)
+            .font(.callout)
+            .frame(
+              maxWidth: .infinity,
+              minHeight: 50,
+              maxHeight: 50,
+              alignment: .center
+            )
+            .background(.red)
         }
       }
     }

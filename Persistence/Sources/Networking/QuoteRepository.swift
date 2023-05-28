@@ -16,6 +16,10 @@ public extension QuoteRepository {
     update: { id, updateType, session in
       let dto = try await URLSession.shared.updateQuote(id: id, updateType: updateType, session: session)
       return .init(dto)
+    },
+    create: { author, body, session in
+      let dto = try await URLSession.shared.createQuote(author: author, body: body, session: session)
+      return .init(dto)
     }
   )
 

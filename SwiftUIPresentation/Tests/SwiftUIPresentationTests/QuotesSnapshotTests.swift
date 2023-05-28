@@ -11,22 +11,26 @@ import ComposableArchitecture
 final class QuotesSnapshotTests: XCTestCase {
 
   func testLoadedQuotes() {
-    let view = QuotesView(
-      store: .init(
-        initialState: .init(quotes: [.mock]),
-        reducer: EmptyReducer()
+    let view = NavigationView {
+      QuotesView(
+        store: .init(
+          initialState: .init(quotes: [.mock]),
+          reducer: EmptyReducer()
+        )
       )
-    )
+    }
     assertSnapshot(matching: view, as: .image(layout: .device(config: .iPhone13Pro)))
   }
 
   func testFailedLoadingQuotes() {
-    let view = QuotesView(
-      store: .init(
-        initialState: .init(status: .failed),
-        reducer: EmptyReducer()
+    let view = NavigationView {
+      QuotesView(
+        store: .init(
+          initialState: .init(status: .failed),
+          reducer: EmptyReducer()
+        )
       )
-    )
+    }
     assertSnapshot(matching: view, as: .image(layout: .device(config: .iPhone13Pro)))
   }
 

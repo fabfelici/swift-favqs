@@ -20,19 +20,25 @@ public struct QuotesFeature: ReducerProtocol {
     public var quotes: IdentifiedArrayOf<Quote>
     public var lastPage: Bool
     public var searchText: String
+    public var creatingQuote: Bool
+    public var createQuoteState: CreateQuoteFeature.State?
 
     public init(
       status: QuotesFeature.State.Status = .loading,
       page: Int = 1,
       quotes: [Quote] = [],
       lastPage: Bool = false,
-      searchText: String = ""
+      searchText: String = "",
+      creatingQuote: Bool = false,
+      createQuoteState: CreateQuoteFeature.State? = nil
     ) {
       self.status = status
       self.page = page
       self.quotes = .init(uniqueElements: quotes)
       self.lastPage = lastPage
       self.searchText = searchText
+      self.creatingQuote = creatingQuote
+      self.createQuoteState = createQuoteState
     }
   }
 
@@ -43,6 +49,9 @@ public struct QuotesFeature: ReducerProtocol {
     case update(Quote.ID, QuoteRepository.UpdateQuoteType)
     case updateQuote(TaskResult<Quote>)
     case searchText(String)
+    case presentCreateQuote
+    case dismissCreateQuote
+    case createQuote(CreateQuoteFeature.Action)
   }
 
   @Dependency(\.continuousClock) var clock
@@ -62,6 +71,9 @@ public struct QuotesFeature: ReducerProtocol {
         return .none
       }
     }
+    .ifLet(\.createQuoteState, action: /Action.createQuote) {
+      CreateQuoteFeature()
+    }
 
     Reduce { state, action in
       guard case .loading = state.status else { return .none }
@@ -80,10 +92,7 @@ public struct QuotesFeature: ReducerProtocol {
         state.quotes += page.quotes
         return .none
 
-      case .loadNext,
-          .updateQuote,
-          .update,
-          .searchText:
+      default:
         return .none
       }
     }
@@ -117,9 +126,17 @@ public struct QuotesFeature: ReducerProtocol {
         state.quotes[id: newQuote.id] = newQuote
         return .none
 
-      case .loaded,
-          .updateQuote(.failure),
-          .searchText:
+      case .presentCreateQuote:
+        state.creatingQuote = true
+        state.createQuoteState = .init()
+        return .none
+
+      case .dismissCreateQuote:
+        state.creatingQuote = false
+        state.createQuoteState = nil
+        return .none
+
+      default:
         return .none
       }
     }
@@ -137,10 +154,7 @@ public struct QuotesFeature: ReducerProtocol {
         state.status = .loading
         return load(state: &state)
 
-      case .loaded,
-          .update,
-          .updateQuote,
-          .searchText:
+      default:
         return .none
       }
     }

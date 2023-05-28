@@ -111,6 +111,24 @@ extension URLSession {
     return try await decoded(for: request)
   }
 
+  func createQuote(
+    author: String,
+    body: String,
+    session: Session
+  ) async throws -> QuoteDTO {
+    let urlString = baseURL + Endpoint.quotes.rawValue
+    var request = try post(session, urlString)
+    request.httpBody = try JSONEncoder()
+      .encode(
+        CreateQuoteRequestDTO(
+          quote: .init(
+            author: author,
+            body: body
+          )
+        )
+      )
+    return try await decoded(for: request)
+  }
 }
 
 extension URLSession {

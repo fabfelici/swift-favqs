@@ -10,13 +10,10 @@ final class QuotesFeatureTests: XCTestCase {
 
   func testLoading() async {
     let clock = TestClock()
-    let feature = withDependencies {
+    let feature = QuotesFeature()
+    let store = TestStore(initialState: .init(), reducer: feature) {
       $0.continuousClock = clock
-    } operation: {
-      QuotesFeature()
     }
-
-    let store = TestStore(initialState: .init(), reducer: feature)
 
     await store.send(.start)
     await clock.advance(by: .seconds(0.3))
@@ -30,12 +27,10 @@ final class QuotesFeatureTests: XCTestCase {
 
   func testNotLoadingIfLastPage() async {
     let clock = TestClock()
-    let feature = withDependencies {
+    let feature = QuotesFeature()
+    let store = TestStore(initialState: .init(), reducer: feature) {
       $0.continuousClock = clock
-    } operation: {
-      QuotesFeature()
     }
-    let store = TestStore(initialState: .init(), reducer: feature)
 
     await store.send(.start)
     await clock.advance(by: .seconds(0.3))
@@ -51,12 +46,10 @@ final class QuotesFeatureTests: XCTestCase {
 
   func testRefreshWhenFailed() async {
     let clock = TestClock()
-    let feature = withDependencies {
+    let feature = QuotesFeature()
+    let store = TestStore(initialState: .init(status: .failed), reducer: feature) {
       $0.continuousClock = clock
-    } operation: {
-      QuotesFeature()
     }
-    let store = TestStore(initialState: .init(status: .failed), reducer: feature)
 
     await store.send(.start) {
       $0.status = .loading
@@ -90,12 +83,10 @@ final class QuotesFeatureTests: XCTestCase {
 
   func testSearch() async {
     let clock = TestClock()
-    let feature = withDependencies {
+    let feature = QuotesFeature()
+    let store = TestStore(initialState: .init(status: .loaded), reducer: feature) {
       $0.continuousClock = clock
-    } operation: {
-      QuotesFeature()
     }
-    let store = TestStore(initialState: .init(status: .loaded), reducer: feature)
 
     await store.send(.searchText("Text")) {
       $0 = .init()
