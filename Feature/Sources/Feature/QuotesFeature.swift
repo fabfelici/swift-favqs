@@ -20,7 +20,6 @@ public struct QuotesFeature: ReducerProtocol {
     public var quotes: IdentifiedArrayOf<Quote>
     public var lastPage: Bool
     public var searchText: String
-    public var creatingQuote: Bool
     public var createQuoteState: CreateQuoteFeature.State?
 
     public init(
@@ -29,7 +28,6 @@ public struct QuotesFeature: ReducerProtocol {
       quotes: [Quote] = [],
       lastPage: Bool = false,
       searchText: String = "",
-      creatingQuote: Bool = false,
       createQuoteState: CreateQuoteFeature.State? = nil
     ) {
       self.status = status
@@ -37,7 +35,6 @@ public struct QuotesFeature: ReducerProtocol {
       self.quotes = .init(uniqueElements: quotes)
       self.lastPage = lastPage
       self.searchText = searchText
-      self.creatingQuote = creatingQuote
       self.createQuoteState = createQuoteState
     }
   }
@@ -127,12 +124,10 @@ public struct QuotesFeature: ReducerProtocol {
         return .none
 
       case .presentCreateQuote:
-        state.creatingQuote = true
         state.createQuoteState = .init()
         return .none
 
       case .dismissCreateQuote:
-        state.creatingQuote = false
         state.createQuoteState = nil
         return .none
 

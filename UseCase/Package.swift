@@ -20,7 +20,6 @@ var package = Package(
     .target(name: "UseCase", dependencies: [
       "Domain",
       .product(name: "Dependencies", package: "swift-dependencies"),
-    ]),
-    .testTarget(name: "UseCaseTests", dependencies: ["UseCase"])
+    ])
   ]
 )

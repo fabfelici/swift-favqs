@@ -51,7 +51,7 @@ struct QuotesView: View {
         .navigationTitle("Quotes")
         .sheet(
           isPresented: viewStore.binding(
-            get: \.creatingQuote,
+            get: { $0.createQuoteState != nil },
             send: { $0 ? .presentCreateQuote : .dismissCreateQuote }
           )
         ) {
