@@ -49,7 +49,18 @@ struct ProfileView: View {
             Text("Following: \(viewStore.following)")
           },
           header: {
-            Text("FAVQS")
+            HStack {
+              AsyncImage(url: viewStore.picUrl) { image in
+                image.resizable()
+                  .scaledToFit()
+              } placeholder: {
+                Image(systemName: "person")
+              }
+              .frame(width: 40, height: 40)
+              .clipShape(Circle())
+
+              Text("FAVQS")
+            }
           }
         )
 
