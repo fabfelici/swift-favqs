@@ -4,7 +4,7 @@ import Dependencies
 
 import Domain
 
-public enum SessionRepositoryKey: TestDependencyKey {
+extension SessionRepository: TestDependencyKey {
   public static var testValue: SessionRepository = {
 #if DEBUG
     .mock
@@ -16,12 +16,12 @@ public enum SessionRepositoryKey: TestDependencyKey {
 
 public extension DependencyValues {
   var sessionRepository: SessionRepository {
-    get { self[SessionRepositoryKey.self] }
-    set { self[SessionRepositoryKey.self] = newValue }
+    get { self[SessionRepository.self] }
+    set { self[SessionRepository.self] = newValue }
   }
 }
 
-public enum QuoteRepositoryKey: TestDependencyKey {
+extension QuoteRepository: TestDependencyKey {
   public static var testValue: QuoteRepository = {
 #if DEBUG
     .mock
@@ -33,12 +33,12 @@ public enum QuoteRepositoryKey: TestDependencyKey {
 
 public extension DependencyValues {
   var quoteRepository: QuoteRepository {
-    get { self[QuoteRepositoryKey.self] }
-    set { self[QuoteRepositoryKey.self] = newValue }
+    get { self[QuoteRepository.self] }
+    set { self[QuoteRepository.self] = newValue }
   }
 }
 
-public enum UserRepositoryKey: TestDependencyKey {
+extension UserRepository: TestDependencyKey {
   public static var testValue: UserRepository = {
 #if DEBUG
     .mock
@@ -50,7 +50,7 @@ public enum UserRepositoryKey: TestDependencyKey {
 
 public extension DependencyValues {
   var userRepository: UserRepository {
-    get { self[UserRepositoryKey.self] }
-    set { self[UserRepositoryKey.self] = newValue }
+    get { self[UserRepository.self] }
+    set { self[UserRepository.self] = newValue }
   }
 }

@@ -8,16 +8,15 @@ import UseCase
 import Feature
 import SwiftUIPresentation
 
-extension QuoteRepositoryKey: DependencyKey {
-  public static var liveValue: QuoteRepository = .live
+extension QuoteRepository: DependencyKey {
+  public static var liveValue: QuoteRepository = .live(sessionRepository: .live)
 }
 
-extension SessionRepositoryKey: DependencyKey {
   public static var liveValue: SessionRepository = .live
 }
 
-extension UserRepositoryKey: DependencyKey {
-  public static var liveValue: UserRepository = .live
+extension UserRepository: DependencyKey {
+  public static var liveValue: UserRepository = .live(sessionRepository: .live)
 }
 
 @main
