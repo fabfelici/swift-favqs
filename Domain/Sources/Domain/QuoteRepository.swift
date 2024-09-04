@@ -13,19 +13,19 @@ public struct QuoteRepository {
     case unhide
   }
 
-  public var quotes: (_ parameters: QuotesParameters?, _ session: Session?) async throws -> QuotePage
+  public var quotes: (_ parameters: QuotesParameters?) async throws -> QuotePage
 
-  public var read: (_ id: Int, _ session: Session?) async throws -> Quote
+  public var read: (_ id: Int) async throws -> Quote
 
-  public var update: (_ id: Int, _ updateType: UpdateQuoteType, _ session: Session) async throws -> Quote
+  public var update: (_ id: Int, _ updateType: UpdateQuoteType) async throws -> Quote
 
-  public var create: (_ author: String, _ body: String, _ session: Session) async throws -> Quote
+  public var create: (_ author: String, _ body: String) async throws -> Quote
 
   public init(
-    quotes: @escaping (QuotesParameters?, Session?) async throws -> QuotePage,
-    read: @escaping (Int, Session?) async throws -> Quote,
-    update: @escaping (Int, UpdateQuoteType, Session) async throws -> Quote,
-    create: @escaping (String, String, Session) async throws -> Quote
+    quotes: @escaping (QuotesParameters?) async throws -> QuotePage,
+    read: @escaping (Int) async throws -> Quote,
+    update: @escaping (Int, UpdateQuoteType) async throws -> Quote,
+    create: @escaping (String, String) async throws -> Quote
   ) {
     self.quotes = quotes
     self.read = read
@@ -38,16 +38,16 @@ public struct QuoteRepository {
 #if DEBUG
 public extension QuoteRepository {
   static let mock = Self(
-    quotes: { _, _ in
+    quotes: { _ in
       .mock
     },
-    read: { _, _ in
+    read: { _ in
       .mock
     },
-    update: { _, _, _ in
+    update: { _, _ in
       .mock
     },
-    create: { _, _, _ in
+    create: { _, _ in
       .mock
     }
   )

@@ -7,7 +7,6 @@ import ComposableArchitecture
 @testable import Feature
 @testable import SwiftUIPresentation
 
-@MainActor
 final class CreateQuoteSnapshotTests: XCTestCase {
 
   func testCreateQuoteView() {

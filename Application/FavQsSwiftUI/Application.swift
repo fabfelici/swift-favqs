@@ -9,7 +9,7 @@ import Feature
 import SwiftUIPresentation
 
 extension QuoteRepositoryKey: DependencyKey {
-  public static var liveValue: QuoteRepository = .live
+  public static var liveValue: QuoteRepository = .live(sessionRepository: .live)
 }
 
 extension SessionRepositoryKey: DependencyKey {
@@ -17,7 +17,7 @@ extension SessionRepositoryKey: DependencyKey {
 }
 
 extension UserRepositoryKey: DependencyKey {
-  public static var liveValue: UserRepository = .live
+  public static var liveValue: UserRepository = .live(sessionRepository: .live)
 }
 
 @main

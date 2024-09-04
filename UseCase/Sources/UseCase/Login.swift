@@ -13,7 +13,7 @@ public extension UseCases {
     @Dependency(\.sessionRepository) var sessionRepository
     @Dependency(\.userRepository) var userRepository
     let session = try await sessionRepository.create(username, password)
-    return try await userRepository.read(session.login, session)
+    return try await userRepository.read(session.login)
   }
 
 }

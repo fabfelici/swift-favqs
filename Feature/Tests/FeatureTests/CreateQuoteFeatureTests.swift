@@ -50,7 +50,7 @@ final class CreateQuoteFeatureTests: XCTestCase {
       ),
       reducer: feature
     ) {
-      $0.quoteRepository.create = { _, _, _ in
+      $0.quoteRepository.create = { _, _ in
         throw error
       }
     }
